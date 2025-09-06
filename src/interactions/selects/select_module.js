@@ -1,21 +1,30 @@
-import { createGeneralConfigDashboard } from '../../utils/uiBuilder.js';
+import { createGeneralConfigDashboard, createRecruitmentDashboard } from '../../utils/uiBuilder.js';
 
 export default {
     key: 'select_module',
     async execute(interaction) {
         const selectedModule = interaction.values[0];
 
+        // Defer a resposta para dar tempo ao bot de processar
+        await interaction.deferUpdate();
+
+        let dashboard;
         switch (selectedModule) {
             case 'module_general':
-                const dashboard = await createGeneralConfigDashboard(interaction.guild.id);
-                await interaction.update(dashboard);
+                dashboard = await createGeneralConfigDashboard(interaction.guild.id);
                 break;
             case 'module_recruitment':
-                // Futuramente, chamará o dashboard de alistamento
-                await interaction.update({ content: 'Dashboard de Alistamento em breve!', embeds: [], components: [] });
+                dashboard = await createRecruitmentDashboard(interaction.guild.id);
+                break;
+            // Placeholders para os futuros módulos
+            case 'module_uniforms':
+            case 'module_promotions':
+                dashboard = { content: `O dashboard para o módulo **${selectedModule.split('_')[1]}** será construído em breve!`, embeds: [], components: [] };
                 break;
             default:
-                await interaction.reply({ content: 'Módulo não encontrado.', ephemeral: true });
+                dashboard = { content: 'Módulo não encontrado.', ephemeral: true };
         }
+        
+        await interaction.editReply(dashboard);
     }
 };

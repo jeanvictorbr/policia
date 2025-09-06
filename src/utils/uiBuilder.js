@@ -1,64 +1,68 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { prisma } from './database.js';
 
-// Função que constrói o Dashboard Principal
-export function createMainDashboard() {
-    const mainDashboard = new EmbedBuilder()
-        .setColor(0x2B2D31)
-        .setTitle('Dashboard de Gerenciamento | PoliceFlow')
-        .setDescription('Bem-vindo ao centro de controle. A partir daqui, você pode gerenciar todos os aspectos da sua facção de forma visual e intuitiva.')
-        .addFields({
-            name: 'Navegação',
-            value: '> Clique no botão `Módulos` para acessar e configurar todas as funcionalidades do bot.'
-        })
-        .setTimestamp()
-        .setFooter({ text: 'PoliceFlow - By Ze piqueno' });
+// Função auxiliar para formatar os valores (Canal ou Cargo)
+const formatValue = (value, type = 'channel') => {
+    if (!value) return '`⚫ Não definido`';
+    return type === 'channel' ? `\`✅\` <#${value}>` : `\`✅\` <@&${value}>`;
+};
 
-    const actionRow = new ActionRowBuilder()
-        .addComponents(
-            new ButtonBuilder()
-                .setCustomId('view_modules')
-                .setLabel('Módulos')
-                .setStyle(ButtonStyle.Secondary)
-                .setEmoji('⚙️')
-        );
-    
-    return { embeds: [mainDashboard], components: [actionRow], flags: [ 64 ] }; // 64 = Ephemeral
+// --- Dashboard Principal (Chamado pelo /painel_config) ---
+export function createMainDashboard() {
+    // ... (este código continua o mesmo)
+    const mainDashboard = new EmbedBuilder().setColor(0x2B2D31).setTitle('Dashboard de Gerenciamento | PoliceFlow').setDescription('Bem-vindo ao centro de controle. A partir daqui, você pode gerenciar todos os aspectos da sua facção de forma visual e intuitiva.').addFields({ name: 'Navegação', value: '> Clique no botão `Módulos` para acessar e configurar todas as funcionalidades do bot.' }).setTimestamp().setFooter({ text: 'PoliceFlow - By Ze piqueno' });
+    const actionRow = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('view_modules').setLabel('Módulos').setStyle(ButtonStyle.Secondary).setEmoji('⚙️'));
+    return { embeds: [mainDashboard], components: [actionRow], flags: [ 64 ] };
 }
 
-
-// Função que constrói o Dashboard de Configurações Gerais (já existente)
-export async function createGeneralConfigDashboard(guildId) {
-    const config = await prisma.guildConfig.findUnique({
-        where: { guild_id: guildId },
-    }) || {}; // Adiciona um objeto vazio para evitar erros se config for nulo
-
-    const formatValue = (value, type = 'channel') => {
-        if (!value) return '`Não definido`';
-        return type === 'channel' ? `<#${value}>` : `<@&${value}>`;
-    };
+// --- Dashboard do Módulo de ALISTAMENTO ---
+export async function createRecruitmentDashboard(guildId) {
+    const config = await prisma.guildConfig.findUnique({ where: { guild_id: guildId } }) || {};
 
     const embed = new EmbedBuilder()
-        .setColor(0x0099FF)
-        .setTitle('🛠️ Dashboard de Configurações Gerais')
-        .setDescription('Veja e altere as configurações essenciais do bot para este servidor. As alterações são refletidas em tempo real.')
+        .setColor(0x1E90FF) // Azul "Dodger Blue"
+        .setTitle('📝 Módulo de Alistamento')
+        .setDescription('Configure todos os aspectos do processo de recrutamento da sua facção. As alterações são refletidas em tempo real no dashboard.')
         .addFields(
-            { name: 'Canal de Análises', value: formatValue(config.analysis_channel_id, 'channel'), inline: true },
-            { name: 'Cargo de Recrutador', value: formatValue(config.recruiter_role_id, 'role'), inline: true },
-            { name: 'Cargo de Aluno/Recruta', value: formatValue(config.recruit_role_id, 'role'), inline: true },
+            { name: 'Canal de Análises', value: formatValue(config.analysis_channel_id, 'channel'), inline: false },
+            { name: 'Cargo de Recrutador', value: formatValue(config.recruiter_role_id, 'role'), inline: false },
+            { name: 'Cargo de Aluno/Recruta Padrão', value: formatValue(config.recruit_role_id, 'role'), inline: false },
         )
-        .setFooter({ text: 'PoliceFlow - By Ze piqueno' });
+        .setFooter({ text: 'PoliceFlow • Dashboard de Módulo' });
 
     const row1 = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`set_config:analysis_channel_id`).setLabel('Canal de Análises').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId(`set_config:recruiter_role_id`).setLabel('Cargo Recrutador').setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder().setCustomId(`set_config:analysis_channel_id`).setLabel('Definir Canal de Análises').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`set_config:recruiter_role_id`).setLabel('Definir Cargo de Recrutador').setStyle(ButtonStyle.Secondary)
     );
     const row2 = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`set_config:recruit_role_id`).setLabel('Cargo Aluno').setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder().setCustomId(`set_config:recruit_role_id`).setLabel('Definir Cargo de Aluno').setStyle(ButtonStyle.Secondary)
     );
-    const row3 = new ActionRowBuilder().addComponents(
+    const backButton = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('view_modules').setLabel('Voltar para Módulos').setStyle(ButtonStyle.Secondary).setEmoji('⬅️')
     );
 
-    return { embeds: [embed], components: [row1, row2, row3] };
+    return { embeds: [embed], components: [row1, row2, backButton] };
+}
+
+// --- Dashboard do Módulo de CONFIGURAÇÕES GERAIS ---
+export async function createGeneralConfigDashboard(guildId) {
+    const config = await prisma.guildConfig.findUnique({ where: { guild_id: guildId } }) || {};
+
+    const embed = new EmbedBuilder()
+        .setColor(0x99AAB5) // Cinza "Blurple"
+        .setTitle('🛠️ Módulo de Configurações Gerais')
+        .setDescription('Configure opções globais que afetam a aparência e o comportamento geral do bot.')
+        .addFields(
+            { name: '🖼️ Logotipo/Banner', value: config.logo_url ? `[Ver Imagem](${config.logo_url})` : '`⚫ Não definido`', inline: false },
+        )
+        .setFooter({ text: 'PoliceFlow • Dashboard de Módulo' });
+        
+    const row1 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`set_config_modal:logo_url`).setLabel('Definir Logotipo/Banner').setStyle(ButtonStyle.Secondary)
+    );
+    const backButton = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('view_modules').setLabel('Voltar para Módulos').setStyle(ButtonStyle.Secondary).setEmoji('⬅️')
+    );
+    
+    return { embeds: [embed], components: [row1, backButton] };
 }

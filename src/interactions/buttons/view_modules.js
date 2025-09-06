@@ -14,16 +14,17 @@ export default {
                     .setCustomId('select_module')
                     .setPlaceholder('Selecione um módulo...')
                     .addOptions(
-                        { label: 'Configurações Gerais', value: 'module_general', emoji: '🛠️' },
-                        { label: 'Alistamento', value: 'module_recruitment', emoji: '📝' },
-                        // Adicionaremos mais módulos aqui no futuro
+                        { label: 'Configurações Gerais', value: 'module_general', emoji: '🛠️', description: 'Configure a aparência e opções globais do bot.' },
+                        { label: 'Alistamento', value: 'module_recruitment', emoji: '📝', description: 'Configure canais, cargos e o fluxo de recrutamento.' },
+                        { label: 'Fardamentos', value: 'module_uniforms', emoji: '👕', description: 'Crie e gerencie os kits de fardas da facção.' },
+                        { label: 'Promoções (Upamento)', value: 'module_promotions', emoji: '⭐', description: 'Configure o sistema de solicitação de promoção.' }
                     )
             );
 
         const backButton = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
-                    .setCustomId('back_to_main_dashboard') // Precisaremos de um handler para este
+                    .setCustomId('back_to_main_dashboard')
                     .setLabel('Voltar')
                     .setStyle(ButtonStyle.Secondary)
                     .setEmoji('⬅️')
