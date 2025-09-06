@@ -54,28 +54,27 @@ export default {
         } 
         // Roteador para Botões
         else if (interaction.isButton()) {
-            // Esta lógica inteligente separa o ID base dos argumentos extras
-            // Ex: "aprovar_alistamento:USER_ID:NOME:ID" vira key="aprovar_alistamento" e args=["USER_ID", "NOME", "ID"]
             const [key, ...args] = interaction.customId.split(':');
             const handler = buttonHandlers.get(key);
             if (handler) await handler.execute(interaction, args).catch(console.error);
         } 
-        // Roteador para TODOS os Menus de Seleção (String, Role, User, etc.)
+        // Roteador para TODOS os Menus de Seleção
         else if (interaction.isAnySelectMenu()) {
             let handler;
-            // Lógica especial para IDs dinâmicos, se necessário
+            // Verifica se é um dos nossos customIds dinâmicos
             if (interaction.customId.startsWith('final_channel_select')) {
                 handler = selectMenuHandlers.get('final_channel_select');
+            } else if (interaction.customId.startsWith('final_role_select')) {
+                handler = selectMenuHandlers.get('final_role_select');
             } else {
-                // Lógica padrão para IDs estáticos (como 'recrutador_selecionado')
+                // Se não for, procura por um ID estático
                 handler = selectMenuHandlers.get(interaction.customId);
             }
+            
             if (handler) await handler.execute(interaction).catch(console.error);
         }
         // Roteador para Envios de Modal (Formulário)
         else if (interaction.isModalSubmit()) {
-            // Lógica para lidar com IDs dinâmicos, como o do alistamento
-            // Ex: "ficha_alistamento_modal:RECRUITER_ID" vira key="ficha_alistamento_modal"
             const [key] = interaction.customId.split(':');
             const handler = modalHandlers.get(key);
             if (handler) await handler.execute(interaction).catch(console.error);
