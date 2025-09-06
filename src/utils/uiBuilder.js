@@ -146,3 +146,35 @@ export async function createUniformsDashboard(guildId) {
 
     return { embeds: [embed], components: [actionRow, backButton] };
 }
+// --- Dashboard de GERENCIAMENTO DE TEMAS (Protegido por Senha) ---
+export async function createThemeManagementDashboard(guildId) {
+    const themes = await prisma.garrisonTheme.findMany({
+        where: { guild_id: guildId },
+        orderBy: { name: 'asc' }
+    });
+
+    let themeList = themes.map(theme => {
+        return `🎨 **${theme.name}** (\`${theme.bot_nickname}\`)`;
+    }).join('\n');
+
+    if (themes.length === 0) {
+        themeList = '> *Nenhum tema customizado foi criado ainda.*';
+    }
+
+    const embed = new EmbedBuilder()
+        .setColor(0x5865F2) // Cor "Blurple" do Discord
+        .setTitle('🔐 Painel de Gerenciamento de Temas')
+        .setDescription('Crie, edite ou delete os temas de guarnição para seu servidor. As alterações aqui são salvas permanentemente no banco de dados.')
+        .addFields({ name: 'Temas Criados', value: themeList });
+
+    const row1 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('create_garrison_theme').setLabel('Criar Tema').setStyle(ButtonStyle.Success).setEmoji('➕'),
+        new ButtonBuilder().setCustomId('edit_garrison_theme').setLabel('Editar Tema').setStyle(ButtonStyle.Primary).setEmoji('✏️'),
+        new ButtonBuilder().setCustomId('delete_garrison_theme').setLabel('Deletar Tema').setStyle(ButtonStyle.Danger).setEmoji('🗑️')
+    );
+    const backButton = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('back_to_general_config').setLabel('Voltar').setStyle(ButtonStyle.Secondary).setEmoji('⬅️')
+    );
+
+    return { embeds: [embed], components: [row1, backButton], flags: [ 64 ] }; // Ephemeral
+}
