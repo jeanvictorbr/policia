@@ -8,12 +8,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- Carregadores Dinâmicos de Handlers ---
-// Criamos "mapas" para armazenar as funções de cada tipo de interação
 const buttonHandlers = new Map();
 const selectMenuHandlers = new Map();
 const modalHandlers = new Map();
 
-// Esta função é executada uma vez quando o bot inicia, lendo todos os arquivos de handler
 async function loadHandlers() {
     // Carrega os handlers de Botão
     const buttonsPath = path.join(__dirname, '..', 'interactions', 'buttons');
@@ -62,10 +60,8 @@ export default {
         else if (interaction.isAnySelectMenu()) {
             let handler;
             // Verifica se é um dos nossos customIds dinâmicos
-            if (interaction.customId.startsWith('final_channel_select')) {
-                handler = selectMenuHandlers.get('final_channel_select');
-            } else if (interaction.customId.startsWith('final_role_select')) {
-                handler = selectMenuHandlers.get('final_role_select');
+            if (interaction.customId.startsWith('save_config')) {
+                handler = selectMenuHandlers.get('save_config');
             } else {
                 // Se não for, procura por um ID estático
                 handler = selectMenuHandlers.get(interaction.customId);
