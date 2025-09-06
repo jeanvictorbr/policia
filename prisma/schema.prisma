@@ -9,11 +9,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Enum para o status de matrícula em um curso
 enum EnrollmentStatus {
-  ENROLLED // Matriculado
-  PASSED   // Aprovado
-  FAILED   // Reprovado
+  ENROLLED
+  PASSED
+  FAILED
 }
 
 // Modelo para as configurações gerais do servidor (Guild)
@@ -23,98 +22,83 @@ model GuildConfig {
   analysis_channel_id      String?
   promotions_channel_id    String?
   reports_channel_id       String?
-  recruiter_role_id        String? // Cargo que pode analisar fichas
-  commander_role_id        String? // Cargo de comando que pode promover, etc.
+  recruit_role_id          String? // << NOVO: Cargo padrão para novos recrutas
   logo_url                 String?
 
   @@map("guild_configs")
 }
 
-// Modelo para o perfil de cada policial
+// NOVO MODELO: Configuração de cargos e suas TAGs
+model RoleConfig {
+  role_id   String @id
+  guild_id  String
+  name      String
+  tag       String // Ex: "REC", "OF-I", "SGT"
+
+  @@map("role_configs")
+}
+
 model Officer {
-  db_id       Int      @id @default(autoincrement()) // ID interno do banco
-  discord_id  String   // ID do Discord do usuário
-  guild_id    String   // ID do servidor onde ele é policial
-  name        String   // Nome do usuário no momento do registro
-  rank        String   // Patente/Cargo atual
+  db_id       Int      @id @default(autoincrement())
+  discord_id  String
+  guild_id    String
+  name_fivem  String   // << RENOMEADO para clareza
+  id_fivem    String   // << NOVO CAMPO
+  rank        String
   join_date   DateTime @default(now())
 
-  // Relações
-  warnings       Warning[]          // Um policial pode ter várias advertências
-  enrollments    CourseEnrollment[] // Um policial pode se matricular em vários cursos
-  led_reports    ActionReport[]     @relation("LeadReports")    // Relatórios que ele liderou
-  participations ActionReport[]     @relation("ParticipantReports") // Relatórios que ele participou
+  warnings       Warning[]
+  enrollments    CourseEnrollment[]
+  led_reports    ActionReport[]     @relation("LeadReports")
+  participations ActionReport[]     @relation("ParticipantReports")
 
-  @@unique([discord_id, guild_id]) // Garante que um usuário só pode ser policial uma vez por servidor
+  @@unique([discord_id, guild_id])
   @@map("officers")
 }
 
-// Modelo para o sistema de advertências
+// ... (O resto dos modelos: Warning, Course, etc. continuam os mesmos)
 model Warning {
   id           Int      @id @default(autoincrement())
   reason       String
   created_at   DateTime @default(now())
-  admin_id     String   // ID do Discord do admin que aplicou
-
-  // Relação: A advertência pertence a um policial
+  admin_id     String
   officer_db_id Int
   officer       Officer @relation(fields: [officer_db_id], references: [db_id])
-
   @@map("warnings")
 }
-
-// Modelo para os cursos da academia
 model Course {
   id          Int      @id @default(autoincrement())
   name        String
   description String?
   guild_id    String
-
-  // Relação: Um curso pode ter várias matrículas
   enrollments CourseEnrollment[]
-
   @@map("courses")
 }
-
-// Tabela de ligação para a relação Muitos-para-Muitos entre Officer e Course
 model CourseEnrollment {
   id     Int              @id @default(autoincrement())
   status EnrollmentStatus @default(ENROLLED)
-
-  // Relações
   officer_db_id Int
   officer       Officer @relation(fields: [officer_db_id], references: [db_id])
   course_id     Int
   course        Course  @relation(fields: [course_id], references: [id])
-
-  @@unique([officer_db_id, course_id]) // Impede matrícula dupla no mesmo curso
+  @@unique([officer_db_id, course_id])
   @@map("course_enrollments")
 }
-
-// Modelo para os kits de fardamento
 model UniformKit {
   id       Int    @id @default(autoincrement())
   name     String
-  codes    String // Aqui serão armazenados os códigos/nomes das peças de roupa
+  codes    String
   guild_id String
-
   @@map("uniform_kits")
 }
-
-// Modelo para os relatórios de ação/ocorrência
 model ActionReport {
   id         Int      @id @default(autoincrement())
   summary    String?
-  thread_id  String   @unique // ID da Thread do Discord onde a ação foi registrada
+  thread_id  String   @unique
   created_at DateTime @default(now())
   guild_id   String
-
-  // Relação: Quem iniciou/liderou a ação
   lead_officer_db_id Int
   lead_officer       Officer @relation("LeadReports", fields: [lead_officer_db_id], references: [db_id])
-
-  // Relação: Muitos-para-Muitos dos outros participantes da ação
   participants Officer[] @relation("ParticipantReports")
-
   @@map("action_reports")
 }

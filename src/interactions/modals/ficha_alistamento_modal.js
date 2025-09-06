@@ -1,47 +1,44 @@
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, RoleSelectMenuBuilder } from 'discord.js';
 import { prisma } from '../../utils/database.js';
 
 export default {
     key: 'ficha_alistamento_modal',
     async execute(interaction) {
-        // Pega as configurações do banco de dados
-        const config = await prisma.guildConfig.findUnique({
-            where: { guild_id: interaction.guild.id }
-        });
-
-        if (!config || !config.analysis_channel_id) {
-            return interaction.reply({ content: '❌ O canal de análise de alistamentos não foi configurado. Contate um administrador.', ephemeral: true });
-        }
-
+        // ... (código para buscar config e analysisChannel continua o mesmo de antes) ...
+        const config = await prisma.guildConfig.findUnique({ where: { guild_id: interaction.guild.id } });
+        if (!config || !config.analysis_channel_id) return interaction.reply({ content: '❌ Canal de análise não configurado.', ephemeral: true });
         const analysisChannel = await interaction.guild.channels.fetch(config.analysis_channel_id);
-        if (!analysisChannel) {
-            return interaction.reply({ content: '❌ O canal de análise configurado não foi encontrado. Contate um administrador.', ephemeral: true });
-        }
+        if (!analysisChannel) return interaction.reply({ content: '❌ Canal de análise não encontrado.', ephemeral: true });
 
-        // Pega as respostas do formulário
-        const nome = interaction.fields.getTextInputValue('form_nome_idade');
+        const nomeFivem = interaction.fields.getTextInputValue('form_nome_fivem');
         const idFivem = interaction.fields.getTextInputValue('form_id_fivem');
-        const motivacao = interaction.fields.getTextInputValue('form_motivacao');
 
-        // Cria a Embed rica para análise
         const applicationEmbed = new EmbedBuilder()
-            .setColor(0xFFA500) // Laranja para "Pendente"
-            .setTitle('📝 Nova Ficha de Alistamento Recebida')
+            .setColor(0xFFA500)
+            .setTitle('📝 Nova Ficha de Alistamento')
             .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
             .setDescription(`**Candidato:** <@${interaction.user.id}>`)
             .addFields(
-                { name: '👤 Nome e Idade', value: `\`\`\`${nome}\`\`\`` },
-                { name: '🆔 ID FiveM', value: `\`\`\`${idFivem}\`\`\`` },
-                { name: '💡 Motivação', value: `\`\`\`${motivacao}\`\`\`` },
-                { name: 'Status', value: '`⏳ PENDENTE DE ANÁLISE`' }
+                { name: '👤 Nome (FiveM)', value: `\`\`\`${nomeFivem}\`\`\``, inline: true },
+                { name: '🆔 ID (FiveM)', value: `\`\`\`${idFivem}\`\`\``, inline: true },
+                { name: 'Status', value: '`⏳ PENDENTE`' }
             )
             .setTimestamp()
             .setFooter({ text: `ID do Candidato: ${interaction.user.id}` });
 
+        // Componente de Seleção de Cargo
+        const roleSelectRow = new ActionRowBuilder()
+            .addComponents(
+                new RoleSelectMenuBuilder()
+                    .setCustomId(`aprovar_cargo_select:${interaction.user.id}`) // ID dinâmico
+                    .setPlaceholder('Opcional: Selecione um cargo inicial')
+            );
+        
+        // Componente dos botões de Ação
         const decisionButtons = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`aprovar_alistamento:${interaction.user.id}`) // ID dinâmico com o ID do candidato
+                    .setCustomId(`aprovar_alistamento:${interaction.user.id}:${nomeFivem}:${idFivem}`) // Passando os dados no ID
                     .setLabel('Aprovar')
                     .setStyle(ButtonStyle.Success)
                     .setEmoji('✅'),
@@ -54,9 +51,9 @@ export default {
 
         await analysisChannel.send({
             embeds: [applicationEmbed],
-            components: [decisionButtons]
+            components: [roleSelectRow, decisionButtons] // Enviando ambos os componentes
         });
 
-        await interaction.reply({ content: '✅ Sua ficha foi enviada com sucesso para análise! Entraremos em contato em breve.', ephemeral: true });
+        await interaction.reply({ content: '✅ Sua ficha foi enviada com sucesso!', ephemeral: true });
     }
 };
