@@ -48,6 +48,9 @@ model GuildConfig {
   logo_url                     String?
 
   @@map("guild_configs")
+  theme_config_password        String?
+  active_theme_id              Int? 
+  themes                       GarrisonTheme[]
 }
 
 // Modelo para o perfil de cada policial/membro da facção
@@ -158,4 +161,21 @@ model ActionReport {
   participants Officer[] @relation("ParticipantReports")
 
   @@map("action_reports")
+  << NOVO MODELO PARA OS TEMAS DAS GUARNIÇÕES >>
+model GarrisonTheme {
+  id                      Int     @id @default(autoincrement())
+  name                    String  // Ex: "BOPE - RJ", "ROTA - SP"
+  is_active               Boolean @default(false)
+  bot_nickname            String? // Nickname que o bot usará com este tema
+  embed_color             String? // Cor hexadecimal (ex: #000000)
+  recruitment_banner_url  String? // URL da imagem para o painel de alistamento
+  main_panel_banner_url   String? // URL da imagem para o painel principal
+
+  // Relação: O tema pertence a um servidor
+  guild_id  String
+  guild     GuildConfig @relation(fields: [guild_id], references: [guild_id])
+
+  @@unique([guild_id, name])
+  @@map("garrison_themes")
+}
 }
