@@ -1,29 +1,37 @@
 import { prisma } from '../../utils/database.js';
-import { createGeneralConfigDashboard } from '../../utils/uiBuilder.js';
+import { createGeneralConfigDashboard, createRecruitmentDashboard, createPromotionsDashboard } from '../../utils/uiBuilder.js';
 
 export default {
     key: 'save_config',
     async execute(interaction) {
-        await interaction.deferUpdate(); // Confirma o recebimento da interação
-
+        // ... (código anterior) ...
         const configType = interaction.customId.split(':')[1];
         const selectedValue = interaction.values[0];
-
+        
         try {
-            await prisma.guildConfig.update({
+            // MUDANÇA AQUI: de 'update' para 'upsert'
+            await prisma.guildConfig.upsert({
                 where: { guild_id: interaction.guild.id },
-                data: { [configType]: selectedValue }
+                update: { [configType]: selectedValue },
+                create: {
+                    guild_id: interaction.guild.id,
+                    [configType]: selectedValue
+                }
             });
 
-            // 1. Recria e atualiza o dashboard principal para refletir a mudança
-            const updatedDashboard = await createGeneralConfigDashboard(interaction.guild.id);
-            // .message.interaction.message é uma forma de pegar a mensagem original do painel
-            await interaction.message.interaction.message.edit(updatedDashboard);
-
-            // 2. Envia a confirmação ephemereal SEM fechar o painel
-            await interaction.followUp({ content: '✅ Configuração atualizada com sucesso!', ephemeral: true });
+            // ... (resto da lógica para recarregar o dashboard e enviar o followUp)
+            // Para encontrar o dashboard correto para recarregar, precisamos de uma pequena lógica
+            let updatedDashboard;
+            if (['analysis_channel_id', 'recruiter_role_id', 'recruit_role_id'].includes(configType)) {
+                updatedDashboard = await createRecruitmentDashboard(interaction.guild.id);
+            } else if (['promotion_request_channel_id', 'promotions_channel_id', 'promotion_approval_role_id'].includes(configType)) {
+                updatedDashboard = await createPromotionsDashboard(interaction.guild.id);
+            } else {
+                updatedDashboard = await createGeneralConfigDashboard(interaction.guild.id);
+            }
             
-            // 3. Deleta a mensagem com o menu de seleção
+            await interaction.message.interaction.message.edit(updatedDashboard);
+            await interaction.followUp({ content: '✅ Configuração atualizada com sucesso!', ephemeral: true });
             await interaction.deleteReply();
 
         } catch (error) {
