@@ -1,3 +1,4 @@
+// ... (imports e data continuam os mesmos) ...
 import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
@@ -6,8 +7,9 @@ export const data = new SlashCommandBuilder()
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(interaction) {
+    // ... (código da embed continua o mesmo) ...
     const recruitmentEmbed = new EmbedBuilder()
-        .setColor(0x2B2D31) // Cor escura, quase preta
+        .setColor(0x2B2D31)
         .setTitle('CENTRAL DE ALISTAMENTO')
         .setDescription('> Deseja fazer parte da nossa corporação? Inicie seu processo de alistamento e mostre seu valor.')
         .setImage('https://i.imgur.com/your-banner-image.png') // **TROQUE ESTE LINK!**
@@ -22,10 +24,10 @@ export async function execute(interaction) {
             new ButtonBuilder()
                 .setCustomId('iniciar_alistamento')
                 .setLabel('Iniciar Alistamento')
-                .setStyle(ButtonStyle.Secondary) // Estilo "preto"
+                .setStyle(ButtonStyle.Secondary) // << MUDANÇA PARA CINZA/PRETO
                 .setEmoji('📝')
         );
 
     await interaction.channel.send({ embeds: [recruitmentEmbed], components: [recruitmentButton] });
-    await interaction.reply({ content: '✅ Painel de alistamento postado com sucesso!', ephemeral: true });
+    await interaction.reply({ content: '✅ Painel de alistamento postado com sucesso!', flags: [ 64 ] }); // 64 = Ephemeral
 }

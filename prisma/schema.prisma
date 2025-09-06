@@ -24,6 +24,7 @@ model GuildConfig {
   reports_channel_id       String?
   recruit_role_id          String? // << NOVO: Cargo padrão para novos recrutas
   logo_url                 String?
+  
 
   @@map("guild_configs")
 }
