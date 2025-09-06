@@ -66,3 +66,37 @@ export async function createGeneralConfigDashboard(guildId) {
     
     return { embeds: [embed], components: [row1, backButton] };
 }
+
+// --- Dashboard do Módulo de FARDAMENTOS ---
+export async function createUniformsDashboard(guildId) {
+    const kits = await prisma.uniformKit.findMany({
+        where: { guild_id: guildId },
+        orderBy: { name: 'asc' }
+    });
+
+    let kitList = kits.map((kit, index) => {
+        return `\`${index + 1}.\` **${kit.name}**`;
+    }).join('\n');
+
+    if (kits.length === 0) {
+        kitList = '> *Nenhum kit de fardamento foi criado ainda.*';
+    }
+
+    const embed = new EmbedBuilder()
+        .setColor(0x718093) // Um cinza elegante
+        .setTitle('👕 Módulo de Fardamentos')
+        .setDescription('Crie e gerencie os kits de fardas da sua facção. Os oficiais poderão visualizar os kits com o comando `/fardamentos`.')
+        .addFields({ name: 'Kits Disponíveis', value: kitList })
+        .setFooter({ text: 'PoliceFlow • Dashboard de Módulo' });
+
+    const actionRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('create_uniform_kit').setLabel('Criar Novo Kit').setStyle(ButtonStyle.Success).setEmoji('➕'),
+        new ButtonBuilder().setCustomId('delete_uniform_kit').setLabel('Deletar Kit').setStyle(ButtonStyle.Danger).setEmoji('🗑️')
+    );
+
+    const backButton = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('view_modules').setLabel('Voltar para Módulos').setStyle(ButtonStyle.Secondary).setEmoji('⬅️')
+    );
+
+    return { embeds: [embed], components: [actionRow, backButton] };
+}
