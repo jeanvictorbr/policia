@@ -100,3 +100,36 @@ export async function createUniformsDashboard(guildId) {
 
     return { embeds: [embed], components: [actionRow, backButton] };
 }
+// --- Dashboard do Módulo de PROMOÇÕES (UPAMENTO) ---
+export async function createPromotionsDashboard(guildId) {
+    const config = await prisma.guildConfig.findUnique({ where: { guild_id: guildId } }) || {};
+
+    const formatValue = (value, type = 'channel') => {
+        if (!value) return '`⚫ Não definido`';
+        return type === 'channel' ? `\`✅\` <#${value}>` : `\`✅\` <@&${value}>`;
+    };
+
+    const embed = new EmbedBuilder()
+        .setColor(0xFFD700) // Dourado
+        .setTitle('⭐ Módulo de Promoções (Upamento)')
+        .setDescription('Configure os canais e cargos para o sistema de solicitação de promoções.')
+        .addFields(
+            { name: 'Canal de Solicitações', value: formatValue(config.promotion_request_channel_id, 'channel'), inline: false },
+            { name: 'Canal de Logs de Promoção', value: formatValue(config.promotions_channel_id, 'channel'), inline: false },
+            { name: 'Cargo que Aprova Promoções', value: formatValue(config.promotion_approval_role_id, 'role'), inline: false }
+        )
+        .setFooter({ text: 'PoliceFlow • Dashboard de Módulo' });
+
+    const row1 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`set_config:promotion_request_channel_id`).setLabel('Definir Canal de Solicitações').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`set_config:promotions_channel_id`).setLabel('Definir Canal de Logs').setStyle(ButtonStyle.Secondary)
+    );
+    const row2 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`set_config:promotion_approval_role_id`).setLabel('Definir Cargo de Aprovação').setStyle(ButtonStyle.Secondary)
+    );
+    const backButton = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('view_modules').setLabel('Voltar para Módulos').setStyle(ButtonStyle.Secondary).setEmoji('⬅️')
+    );
+
+    return { embeds: [embed], components: [row1, row2, backButton] };
+}
