@@ -24,10 +24,10 @@ export default {
                     .setPlaceholder('Clique para escolher um cargo...')
             );
 
-        const backButton = new ActionRowRowBuilder()
+        // A CORREÇÃO ESTÁ AQUI:
+        const backButton = new ActionRowBuilder() // Usando o nome correto: ActionRowBuilder
             .addComponents(
                 new ButtonBuilder()
-                    // Este customId precisa de um handler que chame a função createRoleTypeSelection()
                     .setCustomId('back_to_role_type_select') 
                     .setLabel('Voltar')
                     .setStyle(ButtonStyle.Secondary)
