@@ -1,7 +1,7 @@
 import { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 
 // Função para gerar a tela de seleção de tipo de cargo (para evitar repetir código)
-function createRoleTypeSelection() {
+export function createRoleTypeSelection() {
     const embed = new EmbedBuilder()
         .setColor(0x2B2D31)
         .setTitle('🔗 Vinculação de Cargos')
