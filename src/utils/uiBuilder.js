@@ -178,3 +178,36 @@ export async function createThemeManagementDashboard(guildId) {
 
     return { embeds: [embed], components: [row1, backButton], flags: [ 64 ] }; // Ephemeral
 }
+// Adicione esta função gigante ao seu uiBuilder.js
+
+export async function createRecruitmentEmbedEditor(guildId) {
+    const config = await prisma.guildConfig.findUnique({ where: { guild_id: guildId } }) || {};
+
+    // --- PAINEL DE CONTROLE (EMBED 1) ---
+    const editorEmbed = new EmbedBuilder()
+        .setColor(0x2B2D31)
+        .setTitle('🎨 Editor do Painel de Alistamento')
+        .setDescription('Use os botões abaixo para customizar a aparência do painel público de alistamento. A preview será atualizada em tempo real.');
+
+    const buttons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('edit_embed:recruitment_embed_title').setLabel('Título').setStyle(ButtonStyle.Secondary).setEmoji('✏️'),
+        new ButtonBuilder().setCustomId('edit_embed:recruitment_embed_description').setLabel('Descrição').setStyle(ButtonStyle.Secondary).setEmoji('📄'),
+        new ButtonBuilder().setCustomId('edit_embed:recruitment_embed_image_url').setLabel('Imagem').setStyle(ButtonStyle.Secondary).setEmoji('🖼️')
+    );
+    const backButton = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('back_to_recruitment_dashboard').setLabel('Salvar e Voltar').setStyle(ButtonStyle.Primary).setEmoji('⬅️')
+    );
+
+
+    // --- PAINEL DE PREVIEW (EMBED 2) ---
+    // Usamos os valores do banco de dados, ou os padrões se não existirem
+    const previewEmbed = new EmbedBuilder()
+        .setColor(0x2B2D31)
+        .setTitle(config.recruitment_embed_title || 'CENTRAL DE ALISTAMENTO')
+        .setDescription(config.recruitment_embed_description || '> Deseja fazer parte da nossa corporação? Inicie seu processo...')
+        .setImage(config.recruitment_embed_image_url || null) // Mostra a imagem se existir
+        .setFooter({ text: 'PoliceFlow • Preview em Tempo Real' });
+        
+    // O retorno agora é um array com as duas embeds
+    return { embeds: [editorEmbed, previewEmbed], components: [buttons, backButton] };
+}

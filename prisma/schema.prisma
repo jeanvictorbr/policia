@@ -36,6 +36,7 @@ model GuildConfig {
   promotion_request_channel_id String?
   promotion_approval_role_id   String?
   reports_channel_id           String?
+  uniform_showcase_channel_id  String? // Adicionando para garantir
   logo_url                     String?
   theme_config_password        String?
   active_theme_id              Int?
