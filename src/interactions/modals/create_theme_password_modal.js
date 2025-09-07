@@ -11,13 +11,17 @@ export default {
             return interaction.reply({ content: '❌ As senhas não coincidem. Tente novamente.', ephemeral: true });
         }
 
-        // Criptografa a senha com bcrypt
         const hashedPassword = bcrypt.hashSync(newPassword, 10);
 
         try {
-            await prisma.guildConfig.update({
+            // MUDANÇA AQUI: de 'update' para 'upsert'
+            await prisma.guildConfig.upsert({
                 where: { guild_id: interaction.guild.id },
-                data: { theme_config_password: hashedPassword }
+                update: { theme_config_password: hashedPassword },
+                create: { 
+                    guild_id: interaction.guild.id,
+                    theme_config_password: hashedPassword 
+                }
             });
 
             await interaction.reply({ content: '✅ Senha criada com segurança! Clique no cadeado novamente para acessar o painel.', ephemeral: true });

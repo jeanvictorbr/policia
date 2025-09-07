@@ -1,11 +1,8 @@
 import { prisma } from '../../utils/database.js';
-import { createUniformsDashboard } from '../../utils/uiBuilder.js';
 
 export default {
     key: 'save_uniform_kit',
     async execute(interaction) {
-        await interaction.deferUpdate();
-
         const name = interaction.fields.getTextInputValue('kit_name');
         const codes = interaction.fields.getTextInputValue('kit_codes');
 
@@ -17,15 +14,13 @@ export default {
                     guild_id: interaction.guild.id,
                 }
             });
-
-            const updatedDashboard = await createUniformsDashboard(interaction.guild.id);
-            await interaction.message.edit(updatedDashboard);
-
-            await interaction.followUp({ content: `✅ O kit de fardamento **${name}** foi criado com sucesso!`, ephemeral: true });
+            
+            // MUDANÇA AQUI: Remove a tentativa de editar o dashboard e apenas responde
+            await interaction.reply({ content: `✅ O kit de fardamento **${name}** foi criado com sucesso! A lista será atualizada da próxima vez que você abrir o dashboard.`, ephemeral: true });
 
         } catch (error) {
             console.error('Erro ao criar kit de fardamento:', error);
-            await interaction.followUp({ content: '❌ Ocorreu um erro ao criar o kit.', ephemeral: true });
+            await interaction.reply({ content: '❌ Ocorreu um erro ao criar o kit.', ephemeral: true });
         }
     }
 };
